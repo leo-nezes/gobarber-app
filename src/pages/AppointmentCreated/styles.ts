@@ -28,7 +28,7 @@ export const OkButton = styled(RectButton)`
   justify-content: center;
   align-items: center;
   border-radius: 10px;
-  margin-top: 24;
+  margin-top: 24px;
   padding: 12px 24px;
 `;
 
