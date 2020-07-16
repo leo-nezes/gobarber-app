@@ -12,6 +12,7 @@ import { Form } from '@unform/mobile';
 import { FormHandles } from '@unform/core';
 import * as Yup from 'yup';
 import Icon from 'react-native-vector-icons/Feather';
+import ImagePicker from 'react-native-image-picker';
 
 import api from '../../services/api';
 
@@ -37,7 +38,7 @@ interface ProfileFormData {
   password_confirmation: string;
 }
 
-const SignUp: React.FC = () => {
+const Profile: React.FC = () => {
   const { user, updateUser } = useAuth();
 
   const formRef = useRef<FormHandles>(null);
@@ -48,7 +49,7 @@ const SignUp: React.FC = () => {
   const passwordInputRef = useRef<TextInput>(null);
   const confirmPasswordInputRef = useRef<TextInput>(null);
 
-  const handleSignUp = useCallback(
+  const handleProfile = useCallback(
     async (data: ProfileFormData) => {
       try {
         formRef.current?.setErrors({});
@@ -97,7 +98,7 @@ const SignUp: React.FC = () => {
             : {}),
         };
 
-        const response = await api.put('/profile', formData);
+        const response = await api.put('profile', formData);
 
         updateUser(response.data);
 
@@ -122,6 +123,38 @@ const SignUp: React.FC = () => {
     [navigation, updateUser],
   );
 
+  const handleUpdateAvatar = useCallback(() => {
+    ImagePicker.showImagePicker(
+      {
+        title: 'Selecione um avatar',
+        cancelButtonTitle: 'Cancelar',
+        takePhotoButtonTitle: 'Usar câmera',
+        chooseFromLibraryButtonTitle: 'Escolha da galeria',
+      },
+      (response) => {
+        if (response.didCancel) {
+          return;
+        }
+
+        if (response.error) {
+          Alert.alert('Erro ao atualizar seu avatar');
+        }
+
+        const data = new FormData();
+
+        data.append('avatar', {
+          type: 'image/jpeg',
+          name: `${user.id}.jpg`,
+          uri: response.uri,
+        });
+
+        api.patch('users/avatar', data).then((apiResponse) => {
+          updateUser(apiResponse.data);
+        });
+      },
+    );
+  }, [updateUser, user.id]);
+
   const handleGoBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
@@ -142,7 +175,7 @@ const SignUp: React.FC = () => {
               <Icon name="chevron-left" size={24} color="#999591" />
             </BackButton>
 
-            <UserAvatarButton onPress={() => {}}>
+            <UserAvatarButton onPress={handleUpdateAvatar}>
               <UserAvatar source={{ uri: user.avatar_url }} />
             </UserAvatarButton>
 
@@ -150,7 +183,7 @@ const SignUp: React.FC = () => {
               <Title>Meu Perfil</Title>
             </View>
 
-            <Form initialData={user} ref={formRef} onSubmit={handleSignUp}>
+            <Form initialData={user} ref={formRef} onSubmit={handleProfile}>
               <Input
                 autoCapitalize="words"
                 name="name"
@@ -225,4 +258,4 @@ const SignUp: React.FC = () => {
   );
 };
 
-export default SignUp;
+export default Profile;
